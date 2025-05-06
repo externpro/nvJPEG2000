@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.31.5)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/.devcontainer/cmake)
 include(preproject)
-project(nvJPEG2000 VERSION 0.8.0.1)
+project(nvJPEG2000 VERSION 0.8.0.2)
 set(build 38)
 set(SHA256_Linux f0b4f0ab9e19579c547e96ce189c6a93731f662898751a88d62e3caa59472367)
 set(SHA256_win64 feabb2f4108805b251f44b0561b194a24041d01207b272a3aa42a664e938e5d4)
