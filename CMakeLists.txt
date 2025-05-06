@@ -16,24 +16,24 @@ set(url https://developer.download.nvidia.com/compute/nvjpeg2000/redist/libnvjpe
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   set(url ${url}.zip)
   set(sha ${SHA256_win64})
+  set(fnShared _0)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(url ${url}.tar.xz)
   set(sha ${SHA256_Linux})
-  set(fnExtra _static)
+  set(fnStatic _static)
 endif()
 set(fcName ${PROJECT_NAME}_fc)
 include(FetchContent)
 cmake_policy(SET CMP0168 OLD) # don't want to see download progress
 FetchContent_Declare(${fcName} URL ${url} URL_HASH SHA256=${sha})
 FetchContent_MakeAvailable(${fcName})
+set(nvName nvjpeg2k)
+set(libName xpro::${nvName})
+set(libFileName ${CMAKE_STATIC_LIBRARY_PREFIX}${nvName}${fnStatic}${CMAKE_STATIC_LIBRARY_SUFFIX})
+set(dllFileName ${CMAKE_SHARED_LIBRARY_PREFIX}${nvName}${fnShared}${CMAKE_SHARED_LIBRARY_SUFFIX})
 string(JOIN "\n" EXT1
   "get_filename_component(PKG_ROOTDIR \${CMAKE_CURRENT_LIST_DIR}/../.. ABSOLUTE)"
   "get_filename_component(PKG_ROOTDIR \${PKG_ROOTDIR} ABSOLUTE) # remove relative parts"
-  ""
-  )
-set(libName xpro::nvjpeg2k)
-set(libFileName ${CMAKE_STATIC_LIBRARY_PREFIX}nvjpeg2k${fnExtra}${CMAKE_STATIC_LIBRARY_SUFFIX})
-string(JOIN "\n" EXT2
   "if(NOT TARGET ${libName})"
   "  add_library(${libName} STATIC IMPORTED)"
   "  set(libRelease \${PKG_ROOTDIR}/${CMAKE_INSTALL_LIBDIR}/${libFileName})"
@@ -46,12 +46,18 @@ string(JOIN "\n" EXT2
   "      )"
   "  endif()"
   "endif()"
+  "set(dllPath \${PKG_ROOTDIR}/${CMAKE_INSTALL_LIBDIR}/${dllFileName})"
+  "if(EXISTS \"\${dllPath}\")"
+  "  set(NVJPEG2000_DLLS \"\${dllPath}\")"
+  "  list(APPEND reqVars NVJPEG2000_DLLS)"
+  "endif()"
   ""
   )
 xpPackageDevel(LIBRARIES ${libName})
 string(TOLOWER ${fcName} fcName)
 set(pth ${FETCHCONTENT_BASE_DIR}/${fcName}-src)
-file(GLOB hdrs ${pth}/include/*.h)
+file(GLOB hdrs ${pth}/include/${nvName}*.h)
+file(GLOB dlls ${pth}/lib/${CUDA_VER_MAJOR}/${dllFileName})
 install(FILES ${hdrs} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
-install(FILES ${pth}/lib/${CUDA_VER_MAJOR}/${libFileName} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES ${pth}/lib/${CUDA_VER_MAJOR}/${libFileName} ${dlls} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES ${pth}/LICENSE DESTINATION ${CMAKE_INSTALL_DATADIR})
