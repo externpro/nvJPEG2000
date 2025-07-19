@@ -1,6 +1,5 @@
 {
-  "version": 10,
-  "$comment": "presetSuffix=Release",
+  "version": 8,
   "configurePresets": [
     {
       "name": "config-base",
