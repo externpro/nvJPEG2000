@@ -28,6 +28,11 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   else()
     message(FATAL_ERROR "Unsupported architecture: ${CMAKE_SYSTEM_PROCESSOR}")
   endif()
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+  # there is no macOS download available
+  # https://developer.download.nvidia.com/compute/nvjpeg2000/redist/libnvjpeg_2k/
+  xpPackageDevel()
+  return()
 endif()
 set(url https://developer.download.nvidia.com/compute/nvjpeg2000/redist/libnvjpeg_2k/${os}-${arch}/libnvjpeg_2k-${os}-${arch}-${ver}-archive.${ext})
 set(fcName ${PROJECT_NAME}_fc)
