@@ -6,9 +6,10 @@ set(SHA256_Linux b028f3718f453a71736c01fb8dcbb0174336ea5d69e52fd12a756d6ff5ce785
 set(SHA256_win64 970308dd3837964455600ce68af2fc0ad5e2b4dc415891e8d255ad1191fc248d)
 set(SHA256_aarch64 5d0e61f48dc99c3ac464ceef173c071d8fb6ee0e7e6a83b199291307d9970485)
 set(CUDA_VER_MAJOR 12)
-set(XP_INSTALL_CMAKEDIR ${CMAKE_INSTALL_DATADIR}/cmake) # xpPackageDevel
 string(TOLOWER ${CMAKE_SYSTEM_NAME} os)
 set(ver ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.${build})
+set(nvName nvjpeg2k)
+set(nvLibs LIBRARIES ${nvName})
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   set(arch x86_64)
   set(ext zip)
@@ -29,7 +30,47 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
   # there is no macOS download available
   # https://developer.download.nvidia.com/compute/nvjpeg2000/redist/libnvjpeg_2k/
-  xpPackageDevel()
+  set(nvLibs)
+endif()
+if(DEFINED XP_NAMESPACE)
+  set(nameSpace ${XP_NAMESPACE}::)
+endif()
+if(nvLibs)
+  set(libName ${nameSpace}${nvName})
+  set(libFileName ${CMAKE_STATIC_LIBRARY_PREFIX}${nvName}${fnStatic}${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set(dllFileName ${CMAKE_SHARED_LIBRARY_PREFIX}${nvName}${fnShared}${CMAKE_SHARED_LIBRARY_SUFFIX})
+  string(JOIN "\n" EXT1
+    "get_filename_component(PKG_ROOTDIR \${CMAKE_CURRENT_LIST_DIR}/../.. ABSOLUTE)"
+    "get_filename_component(PKG_ROOTDIR \${PKG_ROOTDIR} ABSOLUTE) # remove relative parts"
+    "if(NOT TARGET ${libName})"
+    "  add_library(${libName} STATIC IMPORTED)"
+    "  set(libRelease \${PKG_ROOTDIR}/${CMAKE_INSTALL_LIBDIR}/${libFileName})"
+    "  if(EXISTS \"\${libRelease}\")"
+    "    set_property(TARGET ${libName} APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)"
+    "    set_target_properties(${libName} PROPERTIES"
+    "      IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE \"C\""
+    "      IMPORTED_LOCATION_RELEASE \"\${libRelease}\""
+    "      INTERFACE_INCLUDE_DIRECTORIES \"\${PKG_ROOTDIR}/${CMAKE_INSTALL_INCLUDEDIR}\""
+    "      )"
+    "  endif()"
+    "endif()"
+    "set(dllPath \${PKG_ROOTDIR}/${CMAKE_INSTALL_LIBDIR}/${dllFileName})"
+    "if(EXISTS \"\${dllPath}\")"
+    "  set(NVJPEG2000_DLLS \"\${dllPath}\")"
+    "  list(APPEND reqVars NVJPEG2000_DLLS)"
+    "endif()"
+    ""
+    )
+endif()
+if(DEFINED XP_NAMESPACE)
+  xpExternPackage(NAMESPACE ${XP_NAMESPACE} ${nvLibs}
+    BASE v0 XPDIFF "bin"
+    WEB "https://developer.nvidia.com/nvjpeg"
+    DESC "high-performance GPU-accelerated library for decoding JPEG 2000 format images (not available on macOS)"
+    LICENSE "[NVIDIA](https://docs.nvidia.com/cuda/nvjpeg2000/license.html 'NVIDIA Software License Agreement')"
+    )
+endif()
+if(NOT nvLibs)
   return()
 endif()
 set(url https://developer.download.nvidia.com/compute/nvjpeg2000/redist/libnvjpeg_2k/${os}-${arch}/libnvjpeg_2k-${os}-${arch}-${ver}-archive.${ext})
@@ -38,33 +79,6 @@ include(FetchContent)
 cmake_policy(SET CMP0168 OLD) # don't want to see download progress
 FetchContent_Declare(${fcName} URL ${url} URL_HASH SHA256=${sha})
 FetchContent_MakeAvailable(${fcName})
-set(nvName nvjpeg2k)
-set(libName xpro::${nvName})
-set(libFileName ${CMAKE_STATIC_LIBRARY_PREFIX}${nvName}${fnStatic}${CMAKE_STATIC_LIBRARY_SUFFIX})
-set(dllFileName ${CMAKE_SHARED_LIBRARY_PREFIX}${nvName}${fnShared}${CMAKE_SHARED_LIBRARY_SUFFIX})
-string(JOIN "\n" EXT1
-  "get_filename_component(PKG_ROOTDIR \${CMAKE_CURRENT_LIST_DIR}/../.. ABSOLUTE)"
-  "get_filename_component(PKG_ROOTDIR \${PKG_ROOTDIR} ABSOLUTE) # remove relative parts"
-  "if(NOT TARGET ${libName})"
-  "  add_library(${libName} STATIC IMPORTED)"
-  "  set(libRelease \${PKG_ROOTDIR}/${CMAKE_INSTALL_LIBDIR}/${libFileName})"
-  "  if(EXISTS \"\${libRelease}\")"
-  "    set_property(TARGET ${libName} APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)"
-  "    set_target_properties(${libName} PROPERTIES"
-  "      IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE \"C\""
-  "      IMPORTED_LOCATION_RELEASE \"\${libRelease}\""
-  "      INTERFACE_INCLUDE_DIRECTORIES \"\${PKG_ROOTDIR}/${CMAKE_INSTALL_INCLUDEDIR}\""
-  "      )"
-  "  endif()"
-  "endif()"
-  "set(dllPath \${PKG_ROOTDIR}/${CMAKE_INSTALL_LIBDIR}/${dllFileName})"
-  "if(EXISTS \"\${dllPath}\")"
-  "  set(NVJPEG2000_DLLS \"\${dllPath}\")"
-  "  list(APPEND reqVars NVJPEG2000_DLLS)"
-  "endif()"
-  ""
-  )
-xpPackageDevel(LIBRARIES ${libName})
 string(TOLOWER ${fcName} fcName)
 set(pth ${FETCHCONTENT_BASE_DIR}/${fcName}-src)
 set(dll ${pth}/lib/${CUDA_VER_MAJOR}/${dllFileName})
