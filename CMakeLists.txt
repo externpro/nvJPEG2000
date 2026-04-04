@@ -67,7 +67,7 @@ if(DEFINED XP_NAMESPACE)
     BASE v0 XPDIFF "bin"
     WEB "https://developer.nvidia.com/nvjpeg"
     DESC "high-performance GPU-accelerated library for decoding JPEG 2000 format images (not available on macOS)"
-    LICENSE "[NVIDIA](https://docs.nvidia.com/cuda/nvjpeg2000/license.html 'NVIDIA Software License Agreement')"
+    LICENSE "[LicenseRef-NVIDIA-SLA](https://docs.nvidia.com/cuda/nvjpeg2000/license.html 'NVIDIA Software License Agreement')"
     )
 endif()
 if(NOT nvLibs)
