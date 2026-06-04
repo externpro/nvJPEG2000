@@ -1,5 +1,4 @@
-cmake_minimum_required(VERSION 3.31)
-set(CMAKE_PROJECT_TOP_LEVEL_INCLUDES .devcontainer/cmake/xproinc.cmake)
+cmake_minimum_required(VERSION 4.3)
 project(nvJPEG2000 VERSION 0.8.1)
 set(build 40)
 set(SHA256_Linux b028f3718f453a71736c01fb8dcbb0174336ea5d69e52fd12a756d6ff5ce785d)
@@ -32,11 +31,8 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
   # https://developer.download.nvidia.com/compute/nvjpeg2000/redist/libnvjpeg_2k/
   set(nvLibs)
 endif()
-if(DEFINED XP_NAMESPACE)
-  set(nameSpace ${XP_NAMESPACE}::)
-endif()
 if(nvLibs)
-  set(libName ${nameSpace}${nvName})
+  set(libName ${PROJECT_NAME}::${nvName})
   set(libFileName ${CMAKE_STATIC_LIBRARY_PREFIX}${nvName}${fnStatic}${CMAKE_STATIC_LIBRARY_SUFFIX})
   set(dllFileName ${CMAKE_SHARED_LIBRARY_PREFIX}${nvName}${fnShared}${CMAKE_SHARED_LIBRARY_SUFFIX})
   string(JOIN "\n" EXT1
@@ -62,8 +58,8 @@ if(nvLibs)
     ""
     )
 endif()
-if(DEFINED XP_NAMESPACE)
-  xpExternPackage(NAMESPACE ${XP_NAMESPACE} ${nvLibs}
+if(COMMAND xpExternPackage)
+  xpExternPackage(${nvLibs}
     BASE v0 XPDIFF "bin"
     WEB "https://developer.nvidia.com/nvjpeg"
     DESC "high-performance GPU-accelerated library for decoding JPEG 2000 format images (not available on macOS)"
